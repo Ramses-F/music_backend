@@ -1,7 +1,10 @@
 const User = require('../models/UserModel');
+const Code = require('../models/CodeModels')
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const nodemailer = require ( "nodemailer" );
+const schedule = require('node-schedule');
 
 exports.registerUser = async (req, res) => {
     const { nom, prenom, mdp, tel, email } = req.body;
@@ -35,7 +38,66 @@ exports.registerUser = async (req, res) => {
         // Save the user to the database
         await newUser.save();
 
-        res.status(201).json({ success: true, message: 'Utilisateur enregistré avec succès', user: newUser });
+        // Generate a random 6-digit code
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Save the code in the Code table
+        const codeEntry = new Code({
+            code: verificationCode,
+            dateAjout: new Date()
+        });
+        await codeEntry.save();
+
+        // Setup nodemailer transport
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'falletkamagate3@gmail.com', // Remplacez par votre email
+                pass: 'qqjt zniy mdcc cedc'   // Remplacez par votre mot de passe ou un mot de passe d'application
+            }
+        });
+
+        // Email options
+        const mailOptions = {
+            from: 'falletkamagate3@gmail.com', // Remplacez par votre email
+            to: email,
+            subject: 'Votre code de vérification',
+            text: `Votre code de vérification est : ${verificationCode}. Il expirera dans 2 minutes.`
+        };
+
+        // Send email
+        await transporter.sendMail(mailOptions);
+
+        // Schedule code deletion after 2 minutes
+        schedule.scheduleJob(new Date(Date.now() + 2 * 60000), async () => {
+            await Code.deleteOne({ _id: codeEntry._id });
+        });
+
+        res.status(201).json({ success: true, message: 'Utilisateur enregistré avec succès. Un code de vérification a été envoyé à votre adresse email.', user: newUser });
+    } catch (error) {
+        console.error(error); // Log the error for debugging
+        res.status(500).json({ success: false, message: 'Erreur serveur', error: error.message });
+    }
+};
+
+exports.verifyCode = async (req, res) => {
+    const { code } = req.body;
+
+    try {
+        // Input validation
+        if (!code) {
+            return res.status(400).json({ success: false, message: 'Le code est obligatoire' });
+        }
+
+        // Check if the code exists and is valid
+        const codeEntry = await Code.findOne({ code });
+
+        if (!codeEntry) {
+            return res.status(400).json({ success: false, message: 'Code invalide ou expiré' });
+        }
+
+        // Code is valid
+        res.status(200).json({ success: true, message: 'Code vérifié avec succès' });
     } catch (error) {
         console.error(error); // Log the error for debugging
         res.status(500).json({ success: false, message: 'Erreur serveur', error: error.message });
