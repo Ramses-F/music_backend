@@ -15,7 +15,7 @@ const getGeolocation = async (address) => {
   };
   exports.addLive = async (req, res) => {
     try {
-      const { lieu, adresse, genre, artiste, contact_artiste, date_live, prix_ticket } = req.body;
+      const { lieu, adresse, genre, artiste, contact_artiste, date_live, prix_ticket, prix_reserv, heure_live } = req.body;
         
       console.log('Adresse reçue:', adresse);
       console.log('lieu reçue:', lieu);
@@ -24,7 +24,7 @@ const getGeolocation = async (address) => {
       // Obtenez les coordonnées géographiques à partir de l'adresse
       const { latitude, longitude } = await getGeolocation(adresse);
   
-      const liveLocation = new Live({ lieu, adresse, genre, latitude, longitude, artiste, contact_artiste, date_live, prix_ticket });
+      const liveLocation = new Live({ lieu, adresse, genre, latitude, longitude, artiste, contact_artiste, date_live, prix_ticket, prix_reserv, heure_live });
       await liveLocation.save();
       res.status(201).send(liveLocation);
     } catch (error) {

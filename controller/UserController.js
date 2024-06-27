@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const nodemailer = require ( "nodemailer" );
 const schedule = require('node-schedule');
+const Paiement = require('../models/PayModels');
+const Reservation = require('../models/ReservModels')
 
 exports.registerUser = async (req, res) => {
     const { nom, prenom, mdp, tel, email } = req.body;
@@ -62,14 +64,28 @@ exports.registerUser = async (req, res) => {
             from: 'falletkamagate3@gmail.com', // Remplacez par votre email
             to: email,
             subject: 'Votre code de vérification',
-            text: `Votre code de vérification est : ${verificationCode}. Il expirera dans 2 minutes.`
+            text: `Bonjour,
+        
+        Votre code de vérification est : ${verificationCode}. Ce code expirera dans 4 minutes.
+        
+        Si vous n'avez pas demandé ce code, veuillez ignorer cet email.
+        
+        Cordialement,
+        
+        L'équipe de [Nom de votre entreprise]
+        Email : [Votre email de contact]
+        Téléphone : [Votre numéro de téléphone]
+        
+        ---
+        Cet email a été généré automatiquement, veuillez ne pas y répondre directement.`
         };
+        
 
         // Send email
         await transporter.sendMail(mailOptions);
 
         // Schedule code deletion after 2 minutes
-        schedule.scheduleJob(new Date(Date.now() + 2 * 60000), async () => {
+        schedule.scheduleJob(new Date(Date.now() + 4 * 60000), async () => {
             await Code.deleteOne({ _id: codeEntry._id });
         });
 
@@ -178,4 +194,173 @@ exports.getUsagerById = async (req, res) => {
     }
 };
 
+exports.pay = async (req, res) => {
+    const { nom, prenom, email, lieu_live, date_live, heure_live, prix_ticket, place } = req.body;
+
+    try {
+        // Rechercher l'utilisateur par email
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+        }
+
+        // Convertir prix_ticket et place en nombres
+        const prixTicketNumber = parseFloat(prix_ticket);
+        const placeNumber = parseInt(place, 10);
+
+        // Vérifier que la conversion est réussie
+        if ( isNaN(placeNumber)) {
+            return res.status(400).json({ success: false, message: 'Prix du ticket ou nombre de places invalide' });
+        }
+
+        // Calcul du total à payer
+        const total = prixTicketNumber * placeNumber;
+
+        // Création d'un nouveau paiement
+        const newPayment = new Paiement({
+            nom,
+            prenom,
+            email,
+            lieu_live,
+            date_live,
+            heure_live,
+            prix_ticket: prixTicketNumber,
+            total,
+            place: placeNumber,
+            statut: true
+        });
+
+        // Sauvegarde du paiement dans la base de données
+        await newPayment.save();
+
+        // Configuration du transporteur nodemailer
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'falletkamagate3@gmail.com', // Remplacez par votre email
+                pass: 'qqjt zniy mdcc cedc'   // Remplacez par votre mot de passe ou un mot de passe d'application
+            }
+        });
+
+        // Options de l'email
+        const mailOptions = {
+            from: 'falletkamagate3@gmail.com', // Remplacez par votre email
+            to: email,
+            subject: 'Confirmation de votre paiement - Devis',
+            text: `Bonjour ${prenom} ${nom},
+        
+        Merci pour votre confiance et votre paiement. Nous sommes ravis de vous compter parmi nos clients.
+        
+        Voici les détails de votre paiement :
+        
+        - Lieu du live : ${lieu_live}
+        - Date du live : ${date_live}
+        - Heure du live : ${heure_live}
+        - Prix du ticket : ${prixTicketNumber.toFixed(2)} FCFA
+        - Nombre de places réservées : ${placeNumber}
+        - Montant total à payer : ${total.toFixed(2)} FCFA
+        
+        Nous vous remercions pour votre paiement et nous réjouissons de vous voir à l'événement. Si vous avez des questions ou des préoccupations, n'hésitez pas à nous contacter.
+        
+        Cordialement,
+        
+        L'équipe de xnova
+        
+        ---
+        Cet email a été généré automatiquement, veuillez ne pas y répondre directement.`
+        };
+        
+
+        // Envoi de l'email
+        await transporter.sendMail(mailOptions);
+
+        res.status(201).json({ success: true, message: 'Paiement enregistré avec succès. Un devis a été envoyé à votre adresse email.', payment: newPayment });
+    } catch (error) {
+        console.error(error); // Log l'erreur pour le débogage
+        res.status(500).json({ success: false, message: 'Erreur serveur', error: error.message });
+    }
+};
+
+
+
+exports.reserv = async (req, res) => {
+    const { nom, prenom, email, lieu_live, date_live, heure_live, prix_reserv, place } = req.body;
+
+    try {
+        // Validation des entrées
+        if (!nom || !prenom || !email || !lieu_live || !date_live || !heure_live || !prix_reserv || !place) {
+            return res.status(400).json({ success: false, message: 'Tous les champs sont obligatoires' });
+        }
+
+        // Rechercher l'utilisateur par email
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+        }
+
+        // Calcul du total à payer
+        const total = prix_reserv * place;
+
+        // Création d'un nouveau paiement
+        const newReservation = new Reservation({
+            nom,
+            prenom,
+            email,
+            lieu_live,
+            date_live,
+            heure_live,
+            prix_reserv,
+            total,
+            place,
+            statut: true
+        });
+
+        // Sauvegarde du paiement dans la base de données
+        await newReservation.save();
+
+        // Configuration du transporteur nodemailer
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'falletkamagate3@gmail.com', // Remplacez par votre email
+                pass: 'qqjt zniy mdcc cedc'   // Remplacez par votre mot de passe ou un mot de passe d'application
+            }
+        });
+
+        // Options de l'email
+        const mailOptions = {
+            from: 'falletkamagate3@gmail.com', // Remplacez par votre email
+            to: email,
+            subject: 'Confirmation de votre réservation - Devis',
+            text: `Bonjour ${prenom} ${nom},
+        
+        Nous vous remercions pour votre réservation. Voici les détails de votre réservation :
+        
+        - Lieu : ${lieu_live}
+        - Date : ${date_live}
+        - Heure : ${heure_live}
+        - Prix par place : ${prix_reserv} FCFA
+        - Nombre de places réservées : ${place}
+        - Montant total à payer : ${total} FCFA
+        
+        Nous sommes impatients de vous accueillir à notre événement. Si vous avez des questions ou des préoccupations, n'hésitez pas à nous contacter.
+        
+        Cordialement,
+        
+        L'équipe de xnova
+        
+        ---
+        Cet email a été généré automatiquement, veuillez ne pas y répondre directement.`
+        };
+        
+
+        // Envoi de l'email
+        await transporter.sendMail(mailOptions);
+
+        res.status(201).json({ success: true, message: 'Reservation enregistré avec succès. Un devis a été envoyé à votre adresse email.', Reservation: newReservation });
+    } catch (error) {
+        console.error(error); // Log l'erreur pour le débogage
+        res.status(500).json({ success: false, message: 'Erreur serveur', error: error.message });
+    }
+};
   

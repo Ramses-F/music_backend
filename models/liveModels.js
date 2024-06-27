@@ -5,6 +5,7 @@ const uniqueValidator = require('mongoose-unique-validator');
 const LiveSchema = mongoose.Schema({
     lieu: {type:String , require: true},
     adresse: {type:String , require: true},
+    prix_reserv: {type:Number , require: true},
     prix_ticket: {type:Number , require: true},
     //extrait_album: {type:String , require: true},
     //image_artiste: {type:String , require: true},
@@ -14,6 +15,7 @@ const LiveSchema = mongoose.Schema({
     artiste:{type:String,require:true},
     contact_artiste:{type:String,require:true},
     date_live:{type:String,require:true},
+    heure_live:{type:String,require:true},
     dateAjout:{type:Date,default: Date.now()},
     dateModif:{type:Date,default:Date.now()},
     dateSuppress:{type:Date,default:Date.now()},
