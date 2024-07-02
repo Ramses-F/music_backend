@@ -7,6 +7,7 @@ const LiveSchema = mongoose.Schema({
     adresse: {type:String , require: true},
     prix_reserv: {type:Number , require: true},
     prix_ticket: {type:Number , require: true},
+    prix_contact: {type:Number , require: true},
     //extrait_album: {type:String , require: true},
     //image_artiste: {type:String , require: true},
     genre:{type:String, require:true},
