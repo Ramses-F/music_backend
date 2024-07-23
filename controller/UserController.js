@@ -281,6 +281,32 @@ exports.pay = async (req, res) => {
     }
 };
 
+exports.countPayments = async (req, res) => {
+    try {
+        // Compte le nombre de paiements
+        const count = await Paiement.countDocuments();
+
+        // Envoie le nombre de paiements en réponse
+        res.status(200).json({ success: true, count });
+    } catch (error) {
+        console.error('Erreur lors du comptage des paiements:', error);
+        res.status(500).json({ success: false, message: 'Erreur serveur', error: error.message });
+    }
+};
+
+exports.getAllPayments = async (req, res) => {
+    try {
+        // Récupère tous les paiements de la base de données
+        const payments = await Paiement.find();
+
+        // Envoie les paiements en réponse
+        res.status(200).json({ success: true, payments });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des paiements:', error);
+        res.status(500).json({ success: false, message: 'Erreur serveur', error: error.message });
+    }
+};
+
 
 
 exports.reserv = async (req, res) => {
@@ -360,6 +386,32 @@ exports.reserv = async (req, res) => {
         res.status(201).json({ success: true, message: 'Reservation enregistré avec succès. Un devis a été envoyé à votre adresse email.', Reservation: newReservation });
     } catch (error) {
         console.error(error); // Log l'erreur pour le débogage
+        res.status(500).json({ success: false, message: 'Erreur serveur', error: error.message });
+    }
+};
+
+exports.countReserv = async (req, res) => {
+    try {
+        // Compte le nombre de paiements
+        const count = await Reservation.countDocuments();
+
+        // Envoie le nombre de paiements en réponse
+        res.status(200).json({ success: true, count });
+    } catch (error) {
+        console.error('Erreur lors du comptage des paiements:', error);
+        res.status(500).json({ success: false, message: 'Erreur serveur', error: error.message });
+    }
+};
+
+exports.getAllReserv = async (req, res) => {
+    try {
+        // Récupère tous les paiements de la base de données
+        const reserv = await Reservation.find();
+
+        // Envoie les paiements en réponse
+        res.status(200).json({ success: true, reserv });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des paiements:', error);
         res.status(500).json({ success: false, message: 'Erreur serveur', error: error.message });
     }
 };

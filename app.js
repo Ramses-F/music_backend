@@ -4,6 +4,7 @@ const cors = require('cors');
 
 const UserRouter = require('./routes/UserRoute'); // Assurez-vous que le chemin est correct
 const LiveRouter = require('./routes/LiveRoute');
+const AdminRouter = require('./routes/AdminRoute')
 
 // Express app setup
 const app = express();
@@ -39,6 +40,7 @@ app.use(function (req, res, next) {
 // Use User routes
 app.use('/api/user', UserRouter);
 app.use('/api/live', LiveRouter);
+app.use('/api/admin', AdminRouter);
 
 // Start the server
 //const PORT = process.env.PORT || 5000;
