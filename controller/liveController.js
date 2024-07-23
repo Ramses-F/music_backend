@@ -39,6 +39,17 @@ const getGeolocation = async (address) => {
       res.status(500).send({ message: 'Une erreur est survenue lors de la récupération des lives.' });
     }
   };
+
+  exports.countLives = async (req, res) => {
+    try {
+      const count = await Live.countDocuments(); // Compte le nombre de documents dans la collection Live
+      res.status(200).send({ count });
+    } catch (error) {
+      console.error('Error counting lives:', error);
+      res.status(500).send({ message: 'Failed to count live events', error });
+    }
+  };
+  
   
   
   
