@@ -1,6 +1,7 @@
 const mongoose = require('mongoose'); 
 const axios = require('axios');
 const Live = require('../models/liveModels')
+require('dotenv').config();
 
 // Fonction pour obtenir les coordonnées géographiques
 const getGeolocation = async (address) => {
@@ -15,16 +16,14 @@ const getGeolocation = async (address) => {
   };
   exports.addLive = async (req, res) => {
     try {
-      const { lieu, adresse, genre, artiste, contact_artiste, date_live, prix_ticket, prix_reserv, heure_live, prix_contact } = req.body;
-        
-      console.log('Adresse reçue:', adresse);
-      console.log('lieu reçue:', lieu);
-      console.log('musique:', genre);
+      const { lieu, adresse, genre, artiste, contact_artiste, date_live, heure_live, prix_contact, tickets
+           } = req.body;
 
       // Obtenez les coordonnées géographiques à partir de l'adresse
       const { latitude, longitude } = await getGeolocation(adresse);
   
-      const liveLocation = new Live({ lieu, adresse, genre, latitude, longitude, artiste, contact_artiste, date_live, prix_ticket, prix_reserv, heure_live, prix_contact });
+      const liveLocation = new Live({ 
+        lieu, adresse, genre, artiste, contact_artiste, date_live, heure_live, prix_contact, tickets, longitude, latitude });
       await liveLocation.save();
       res.status(201).send(liveLocation);
     } catch (error) {
@@ -40,6 +39,45 @@ const getGeolocation = async (address) => {
       res.status(500).send({ message: 'Une erreur est survenue lors de la récupération des lives.' });
     }
   };
+
+  exports.envoyerSms = async (req, res) => {
+    const { contact_artiste } = req.body;
+    const apiKey = process.env.INFOBIP_API_KEY;
+    const baseUrl = process.env.INFOBIP_BASE_URL;
+
+    const message = 'Bonjour, ceci est un message prédéfini pour vous informer d\'un événement important.';
+
+    const data = {
+        messages: [
+            {
+                from: "InfoSMS",
+                destinations: [
+                    {
+                        to: contact_artiste
+                    }
+                ],
+                text: message
+            }
+        ]
+    };
+
+    try {
+        const response = await axios.post(`${baseUrl}/sms/2/text/advanced`, data, {
+            headers: {
+                'Authorization': `App ${apiKey}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+
+        res.status(200).send({ message: 'SMS envoyé avec succès', data: response.data });
+    } catch (error) {
+        res.status(500).send({
+            message: 'Une erreur est survenue lors de l\'envoi du SMS',
+            error: error.response ? error.response.data : error.message
+        });
+    }
+};
   
   
   

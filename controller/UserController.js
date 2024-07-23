@@ -195,7 +195,7 @@ exports.getUsagerById = async (req, res) => {
 };
 
 exports.pay = async (req, res) => {
-    const { nom, prenom, email, lieu_live, date_live, heure_live, prix_ticket, place } = req.body;
+    const {email, lieu_live, date_live, heure_live, prix_ticket, place, artiste, type } = req.body;
 
     try {
         // Rechercher l'utilisateur par email
@@ -218,8 +218,6 @@ exports.pay = async (req, res) => {
 
         // Création d'un nouveau paiement
         const newPayment = new Paiement({
-            nom,
-            prenom,
             email,
             lieu_live,
             date_live,
@@ -227,6 +225,8 @@ exports.pay = async (req, res) => {
             prix_ticket: prixTicketNumber,
             total,
             place: placeNumber,
+            artiste,
+            type,
             statut: true
         });
 
@@ -247,7 +247,7 @@ exports.pay = async (req, res) => {
             from: 'falletkamagate3@gmail.com', // Remplacez par votre email
             to: email,
             subject: 'Confirmation de votre paiement - Devis',
-            text: `Bonjour ${prenom} ${nom},
+            text: `Bonjour ,
         
         Merci pour votre confiance et votre paiement. Nous sommes ravis de vous compter parmi nos clients.
         
@@ -284,11 +284,11 @@ exports.pay = async (req, res) => {
 
 
 exports.reserv = async (req, res) => {
-    const { nom, prenom, email, lieu_live, date_live, heure_live, prix_reserv, place } = req.body;
+    const { email, lieu_live, date_live, heure_live, prix_reserv, place, artiste, type } = req.body;
 
     try {
         // Validation des entrées
-        if (!nom || !prenom || !email || !lieu_live || !date_live || !heure_live || !prix_reserv || !place) {
+        if (!email || !lieu_live || !date_live || !heure_live || !prix_reserv || !place) {
             return res.status(400).json({ success: false, message: 'Tous les champs sont obligatoires' });
         }
 
@@ -303,8 +303,6 @@ exports.reserv = async (req, res) => {
 
         // Création d'un nouveau paiement
         const newReservation = new Reservation({
-            nom,
-            prenom,
             email,
             lieu_live,
             date_live,
@@ -312,6 +310,8 @@ exports.reserv = async (req, res) => {
             prix_reserv,
             total,
             place,
+            artiste,
+            type,
             statut: true
         });
 
@@ -332,7 +332,7 @@ exports.reserv = async (req, res) => {
             from: 'falletkamagate3@gmail.com', // Remplacez par votre email
             to: email,
             subject: 'Confirmation de votre réservation - Devis',
-            text: `Bonjour ${prenom} ${nom},
+            text: `Bonjour,
         
         Nous vous remercions pour votre réservation. Voici les détails de votre réservation :
         
