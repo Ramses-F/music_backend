@@ -9,6 +9,8 @@ router.get('/getAllpay', User.getAllPayments);
 router.get('/getAllreserv', User.getAllReserv);
 router.get('/countPay', User.countPayments);
 router.get('/countRersv', User.countReserv);
+router.get('/payByDate', User.sommeTotauxParDate);
+router.get('/reservByDate', User.sommeReservParDate);
 // router.get('/users/:id', User.getUsagerById);
 
 module.exports = router;

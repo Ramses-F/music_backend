@@ -281,6 +281,31 @@ exports.pay = async (req, res) => {
     }
 };
 
+exports.sommeTotauxParDate = async (req, res) => {
+    try {
+        // Récupérer tous les paiements depuis la base de données
+        const paiements = await Paiement.find();
+
+        // Grouper les paiements par date et calculer la somme des totaux pour chaque groupe
+        const sommeTotauxParDate = paiements.reduce((acc, paiement) => {
+            const date = paiement.dateAjout.toISOString().split('T')[0]; // Extraire la date sans l'heure
+            if (!acc[date]) {
+                acc[date] = 0;
+            }
+            acc[date] += paiement.total;
+            return acc;
+        }, {});
+
+        // Transformer l'objet en tableau pour un affichage plus facile
+        const result = Object.entries(sommeTotauxParDate).map(([date, total]) => ({ date, total }));
+
+        // Afficher les résultats
+        res.status(200).json({ success: true, data: result });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Erreur serveur', error: error.message });
+    }
+};
 exports.countPayments = async (req, res) => {
     try {
         // Compte le nombre de paiements
@@ -386,6 +411,32 @@ exports.reserv = async (req, res) => {
         res.status(201).json({ success: true, message: 'Reservation enregistré avec succès. Un devis a été envoyé à votre adresse email.', Reservation: newReservation });
     } catch (error) {
         console.error(error); // Log l'erreur pour le débogage
+        res.status(500).json({ success: false, message: 'Erreur serveur', error: error.message });
+    }
+};
+
+exports.sommeReservParDate = async (req, res) => {
+    try {
+        // Récupérer tous les paiements depuis la base de données
+        const reservations = await Reservation.find();
+
+        // Grouper les paiements par date et calculer la somme des totaux pour chaque groupe
+        const sommeReservParDate = reservations.reduce((acc, Reservation) => {
+            const date = Reservation.dateAjout.toISOString().split('T')[0]; // Extraire la date sans l'heure
+            if (!acc[date]) {
+                acc[date] = 0;
+            }
+            acc[date] += Reservation.total;
+            return acc;
+        }, {});
+
+        // Transformer l'objet en tableau pour un affichage plus facile
+        const result = Object.entries(sommeReservParDate).map(([date, total]) => ({ date, total }));
+
+        // Afficher les résultats
+        res.status(200).json({ success: true, data: result });
+    } catch (error) {
+        console.error(error);
         res.status(500).json({ success: false, message: 'Erreur serveur', error: error.message });
     }
 };
